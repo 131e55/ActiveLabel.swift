@@ -80,19 +80,26 @@ struct ActiveBuilder {
         let nsstring = text as NSString
         var elements: [ElementTuple] = []
 
+        let symbol: String
+        if type == .mention { symbol = "@" }
+        else if type == .hashtag { symbol = "#" }
+        else { symbol = "" }
+
         for match in matches where match.range.length > 2 {
-            let range = NSRange(location: match.range.location + 1, length: match.range.length - 1)
+
+            var range = match.range
             var word = nsstring.substring(with: range)
-            if word.hasPrefix("@") {
-                word.remove(at: word.startIndex)
+
+            while !word.hasPrefix(symbol) {
+
+                range = NSRange(location: range.location + 1, length: range.length - 1)
+                word = nsstring.substring(with: range)
             }
-            else if word.hasPrefix("#") {
-                word.remove(at: word.startIndex)
-            }
+            word.remove(at: word.startIndex)
 
             if filterPredicate?(word) ?? true {
                 let element = ActiveElement.create(with: type, text: word)
-                elements.append((match.range, element, type))
+                elements.append((range, element, type))
             }
         }
         return elements
